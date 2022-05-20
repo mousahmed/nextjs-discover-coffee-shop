@@ -14,3 +14,16 @@ a {
 * {
   box-sizing: border-box;
 }
+
+
+.container {
+  height: 90vh;
+}
+
+.footer {
+  background-color: #0070f3;
+  height: 10vh;
+  padding: 1rem;
+  color: #fff;
+
+}
