@@ -6,7 +6,6 @@ function MyApp({ Component, pageProps }) {
 			<div className="container">
 				<Component {...pageProps} />
 			</div>
-			<footer className="footer"> This my personal website</footer>
 		</>
 	);
 }
