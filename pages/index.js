@@ -4,20 +4,53 @@ import styles from "../styles/home.module.css";
 import Banner from "../components/banner";
 import Card from "../components/card";
 
-import coffeeStoresData from "../data/coffee-stores.json";
-import { fetchCoffeeStores } from "../lib/coffee-stores";
+import {fetchCoffeeStores} from "../lib/coffee-stores";
+import useTrackLocation from "../hooks/use-track-location";
+import {useEffect, useState, useContext} from "react";
+import {ACTION_TYPES, StoreContext} from "./_app";
 
 export async function getStaticProps(context) {
 	const coffeeStores = await fetchCoffeeStores();
-
 	return {
-		props: { coffeeStores },
+		props: {coffeeStores},
 	};
 }
 
 export default function Home(props) {
+	const {handleTrackLocation, locationErrorMsg, isFindingLocation} =
+		useTrackLocation();
+
+	// const [coffeeStores, setCoffeeStores] = useState("");
+	const [coffeeStoresError, setCoffeeStoresError] = useState(null);
+	const {dispatch, state} = useContext(StoreContext);
+	const {coffeeStores, latLong} = state;
+
+	console.log({latLong, locationErrorMsg});
+	console.log(coffeeStores);
+
+	useEffect(() => {
+		async function setCoffeeStoresByLocation() {
+			if (latLong) {
+				try {
+					const fetchedCoffeeStores = await fetchCoffeeStores(latLong, 30);
+					console.log({fetchedCoffeeStores});
+					// setCoffeeStores(fetchedCoffeeStores);
+					dispatch({
+						type: ACTION_TYPES.SET_COFFEE_STORES,
+						payload: {coffeeStores: fetchedCoffeeStores},
+					});
+				} catch (error) {
+					console.log({error});
+					setCoffeeStoresError(error.message);
+				}
+			}
+		}
+		setCoffeeStoresByLocation();
+	}, [latLong]);
+
 	const handleOnBannerBtnClick = (event) => {
 		console.log("on banner click");
+		handleTrackLocation();
 	};
 	return (
 		<div className={styles.container}>
@@ -29,33 +62,59 @@ export default function Home(props) {
 
 			<main className={styles.main}>
 				<Banner
-					buttonText="View stores nearby"
+					buttonText={isFindingLocation ? "Loading..." : "View Stores nearby"}
 					handleOnClick={handleOnBannerBtnClick}
 				/>
+				{locationErrorMsg && <p>Something went wrong: {locationErrorMsg}</p>}
+				{coffeeStoresError && <p>Something went wrong: {coffeeStoresError}</p>}
 				<div className={styles.heroImage}>
 					<Image src="/static/hero-image.png" width={700} height={400} />
 				</div>
-				{props.coffeeStores.length > 0 && (
-					<>
-						<h2 className={styles.heading2}>Toronto Stores</h2>
-						<div className={styles.cardLayout}>
-							{props.coffeeStores.map((store) => {
-								return (
-									<Card
-										key={store.id}
-										name={store.name}
-										imgUrl={
-											store.imgUrl ||
-											"https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80"
-										}
-										href={`/coffee-store/${store.id}`}
-										className={styles.card}
-									/>
-								);
-							})}
+
+				<div>
+					{coffeeStores.length > 0 && (
+						<div className={styles.sectionWrapper}>
+							<h2 className={styles.heading2}>Stores Near You</h2>
+							<div className={styles.cardLayout}>
+								{coffeeStores.map((store) => {
+									return (
+										<Card
+											key={store.id}
+											name={store.name}
+											imgUrl={
+												store.imgUrl ||
+												"https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80"
+											}
+											href={`/coffee-store/${store.id}`}
+											className={styles.card}
+										/>
+									);
+								})}
+							</div>
 						</div>
-					</>
-				)}
+					)}
+					{props.coffeeStores.length > 0 && (
+						<div className={styles.sectionWrapper}>
+							<h2 className={styles.heading2}>Toronto Stores</h2>
+							<div className={styles.cardLayout}>
+								{props.coffeeStores.map((store) => {
+									return (
+										<Card
+											key={store.id}
+											name={store.name}
+											imgUrl={
+												store.imgUrl ||
+												"https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80"
+											}
+											href={`/coffee-store/${store.id}`}
+											className={styles.card}
+										/>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</div>
 			</main>
 		</div>
 	);
