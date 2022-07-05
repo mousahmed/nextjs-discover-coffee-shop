@@ -8,7 +8,7 @@ import {fetchCoffeeStores} from "../../lib/coffee-stores";
 
 import styles from "../../styles/coffee-store.module.css";
 import {useContext, useEffect, useState} from "react";
-import {StoreContext} from "../_app";
+import {StoreContext} from "../../store/store-context";
 
 export async function getStaticProps(staticProps) {
 	const params = staticProps.params;
